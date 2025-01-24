@@ -210,3 +210,55 @@ saveWorkbook(wb, output_file_path, overwrite = TRUE)
 
 cat("Filtered ANOVA results and effect sizes saved to:", output_file_path, "\n")
 
+# Create an Excel workbook
+wb <- createWorkbook()
+
+# Loop through valid columns
+for (i in 13:length(valid_columns)) {
+  column_name <- valid_columns[i]
+  
+  sheet_name <- short_sheet_name(column_name)
+  
+  
+  cat("Processing Column:", column_name, "\n")
+  
+  # Fit the linear model
+  lm_model <- lm(unlist(data_openfield[[column_name]]) ~ APOE * Diet, data = data_openfield)
+  
+  # Compute estimated marginal means (EMMs)
+  emmeans_results <- tryCatch(
+    {
+      emmeans(lm_model, ~ APOE * Diet)
+    },
+    error = function(e) {
+      cat("Error in EMMs for column:", column_name, "\n")
+      NULL
+    }
+  )
+  
+  if (!is.null(emmeans_results)) {
+    # Extract means, SE, and confidence intervals
+    means_df <- as.data.frame(summary(emmeans_results))
+    
+    # Rearrange columns for clarity
+    means_df <- means_df %>%
+      select(APOE, Diet, emmean, SE, df, lower.CL, upper.CL) %>%
+      rename(
+        Mean = emmean,
+        Standard_Error = SE,
+        Degrees_of_Freedom = df,
+        Lower_Confidence_Limit = lower.CL,
+        Upper_Confidence_Limit = upper.CL
+      )
+    
+    # Add the sheet to the workbook
+    addWorksheet(wb, sheet_name)
+    writeData(wb, sheet_name, means_df)
+  }
+}
+
+# Save the workbook
+output_path <- file.path(output_folder, "Column_Means_SEs.xlsx")
+saveWorkbook(wb, output_path, overwrite = TRUE)
+
+cat("Means and SEs saved to:", output_path, "\n")
