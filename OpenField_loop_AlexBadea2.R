@@ -139,13 +139,13 @@ for (i in 13:length(valid_columns)) {
   addWorksheet(wb, paste0("LM_", sheet_name))
   writeData(wb, paste0("LM_", sheet_name), anova_results_df)
   
-  # Cohen's effect sizes and confidence intervals
+  # Eta2 effect sizes and confidence intervals
   effect_sizes <- effectsize::eta_squared(lm_model, partial = TRUE, ci = 0.95)
   effect_sizes_df <- as.data.frame(effect_sizes)
-  addWorksheet(wb, paste0("Cohen_", sheet_name))
-  writeData(wb, paste0("Cohen_", sheet_name), effect_sizes_df)
+  addWorksheet(wb, paste0("Eta2_", sheet_name))
+  writeData(wb, paste0("Eta2_", sheet_name), effect_sizes_df)
   
-  # Posthic pairwise comparisons
+  # Posthoc pairwise comparisons
   #myres <- na.omit((emmeans(lm_model, list(pairwise ~ APOE), adjust="tukey")$`pairwise differences of APOE`))
   
   posthoc_results <- na.omit(emmeans(lm_model, pairwise ~ APOE * Diet, adjust = "tukey"))
