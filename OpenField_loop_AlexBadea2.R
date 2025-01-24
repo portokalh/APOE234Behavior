@@ -216,7 +216,6 @@ wb <- createWorkbook()
 # Loop through valid columns
 for (i in 13:length(valid_columns)) {
   column_name <- valid_columns[i]
-  
   sheet_name <- short_sheet_name(column_name)
   
   
@@ -262,3 +261,27 @@ output_path <- file.path(output_folder, "Column_Means_SEs.xlsx")
 saveWorkbook(wb, output_path, overwrite = TRUE)
 
 cat("Means and SEs saved to:", output_path, "\n")
+
+wb <- createWorkbook()
+output_path <- file.path(output_folder, "Pairs.xlsx")
+
+for (i in 13:length(valid_columns)) {
+  #for (i in 13) {
+  column_name <- valid_columns[i]  # Get the column name
+  sheet_name <- short_sheet_name(column_name)
+  cat("Processing Column Index:", i, "Column Name:", column_name, "\n")
+  
+  #lm_model <- lm(unlist(data_openfield[, column_name]) ~ APOE * HN * Age * Sex * Diet, data = data_openfield)
+  
+  # Fit the linear model
+  lm_model <- lm(unlist(data_openfield[, column_name]) ~ APOE * Diet, data = data_openfield)
+  pairwise_results <- emmeans(lm_model, pairwise ~ APOE * Diet, adjust = "tukey")
+  contrast_df <- as.data.frame(pairwise_results$contrasts)
+  
+  
+  addWorksheet(wb, sheet_name)
+  writeData(wb, sheet_name, contrast_df)
+}
+
+  saveWorkbook(wb, output_path, overwrite = TRUE)
+  cat("Pairwise comparisons saved to:", output_path, "\n")
